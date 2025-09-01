@@ -3,27 +3,51 @@
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="col-6">
-            <form class="row" method="post" enctype="multipart/form-data">
-                <div class="card">
-                    <div class="card-body">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <div>
-                            <button type="submit" class="btn btn-primary">
-                                {% if object %}
-                                Сохранить
-                                {% else %}
-                                Создать
-                                {% endif %}
-                            </button>
-                        </div>
-                    </div>
+    <form class="row g-3" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        {% if object %}
+                            Редактирование Продуктов
+                        {% else %}
+                            Создание Продуктов
+                        {% endif %}
+                    </h5>
                 </div>
-            </form>
+                <div class="card-body">
+                    {{ form.as_p }}
+                </div>
+            </div>
         </div>
-    </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Страна производитель</h5>
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    {% for form in formset.forms %}
+                        <div class="form-group">
+                            {{ form.as_p }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 mt-3 text-center">
+            <button type="submit" class="btn btn-primary">
+                {% if object %}
+                    Сохранить
+                {% else %}
+                    Создать
+                {% endif %}
+            </button>
+        </div>
+    </form>
 </div>
 {% endblock %}
-

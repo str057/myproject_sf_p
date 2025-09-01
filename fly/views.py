@@ -1,11 +1,15 @@
-from django.db.migrations import CreateModel
-from django.urls import reverse, reverse_lazy
+from django.forms import inlineformset_factory
+from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Product
+from django.shortcuts import redirect
+
+from .forms import ProdForm, ParentForm
+from .models import Product, Parent
+
 
 class ProdListView(ListView):
     model = Product
-    template_name = 'fly/product_list.html'  # Явное указание шаблона
+    template_name = 'fly/product_list.html'
     context_object_name = 'products'
 
 
@@ -13,52 +17,73 @@ class ProdDetailView(DetailView):
     model = Product
     template_name = 'fly/product_detail.html'
     context_object_name = 'product'
-    paginate_by = 12
 
     def get_object(self, queryset=None):
         self.object = super().get_object(queryset)
-        self.object.views_counter +=1
+        self.object.views_counter += 1
         self.object.save()
         return self.object
 
 
-
 class ProdCreateView(CreateView):
     model = Product
-    fields = ("name", "category", "price", "image")
+    form_class = ProdForm
     success_url = reverse_lazy('fly:product_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ParentFormSet = inlineformset_factory(Product, Parent, form=ParentForm, extra=1, can_delete=True)
+        if self.request.method == 'POST':
+            context['formset'] = ParentFormSet(self.request.POST, self.request.FILES)
+        else:
+            context['formset'] = ParentFormSet()
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+        if formset.is_valid():
+            self.object = form.save()
+            formset.instance = self.object
+            formset.save()
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
+
 
 class ProdUpdateView(UpdateView):
     model = Product
-    fields = ("name", "category", "price", "image")
-    success_url = reverse_lazy('fly:product_list')
+    form_class = ProdForm
+    template_name = 'fly/product_form.html'
 
     def get_success_url(self):
-        return reverse('fly:product_detail', args=[self.kwargs.get('pk')])
+        return reverse_lazy('fly:product_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ParentFormSet = inlineformset_factory(Product, Parent, form=ParentForm, extra=1, can_delete=True)
+
+        if self.request.method == 'POST':
+            context['formset'] = ParentFormSet(self.request.POST, self.request.FILES, instance=self.object)
+        else:
+            context['formset'] = ParentFormSet(instance=self.object)
+
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+
+        if form.is_valid() and formset.is_valid():
+            self.object = form.save()
+            formset.instance = self.object
+            formset.save()
+            return redirect(self.get_success_url())
+        else:
+            # Если форма невалидна, возвращаем ошибки
+            return self.render_to_response(self.get_context_data(form=form))
+
 
 class ProdDeleteView(DeleteView):
     model = Product
     success_url = reverse_lazy('fly:product_list')
-
-
-
-
-
-
-
-    #app_name/<model_name>_<action>
-    #fly/product_list.html
-
-#def index(request):
-#    products = Product.objects.all()
- #   print(f"Получено продуктов: {products.count()}")  # Отладка
- #   for product in products:
- #       print(f"Продукт: {product.name}")  # Отладка
- #   context = {"products": products}
- #   return render(request, "product_list.html", context)
-
-
-# def prod_detail(request, pk):
-#   product = get_object_or_404(Product, pk=pk)
-#  context = {"product": product}
-#  return render(request, "product_detail.html", context)
