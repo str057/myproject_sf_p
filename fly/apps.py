@@ -6,4 +6,4 @@ class FlyConfig(AppConfig):
     name = "fly"
 
 
-#skypro
+#skyproawea
