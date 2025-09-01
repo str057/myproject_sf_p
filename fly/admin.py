@@ -17,3 +17,5 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Parent)
 class ParentAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
+
+    ###
