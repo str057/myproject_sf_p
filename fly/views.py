@@ -2,6 +2,7 @@ from django.forms import inlineformset_factory
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.shortcuts import redirect
+from django.contrib.auth.mixins import LoginRequiredMixin  # Импорт миксина
 
 from .forms import ProdForm, ParentForm
 from .models import Product, Parent
@@ -25,7 +26,7 @@ class ProdDetailView(DetailView):
         return self.object
 
 
-class ProdCreateView(CreateView):
+class ProdCreateView(LoginRequiredMixin, CreateView):
     model = Product
     form_class = ProdForm
     success_url = reverse_lazy('fly:product_list')
@@ -51,7 +52,7 @@ class ProdCreateView(CreateView):
             return self.form_invalid(form)
 
 
-class ProdUpdateView(UpdateView):
+class ProdUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
     form_class = ProdForm
     template_name = 'fly/product_form.html'
@@ -84,6 +85,6 @@ class ProdUpdateView(UpdateView):
             return self.render_to_response(self.get_context_data(form=form))
 
 
-class ProdDeleteView(DeleteView):
+class ProdDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
     success_url = reverse_lazy('fly:product_list')
