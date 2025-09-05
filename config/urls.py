@@ -8,7 +8,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("fly.urls", namespace="fly")),
     path("users/", include("users.urls", namespace="users")),
-    path('blogs/', include('blog.urls', namespace='blog')),  # Добавьте namespace
+    path("blogs/", include("blog.urls", namespace="blog")),  # Добавьте namespace
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
