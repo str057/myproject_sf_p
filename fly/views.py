@@ -177,3 +177,6 @@ class ProductUnpublishView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy("fly:product_detail", kwargs={"pk": self.object.pk})
+
+
+#skypro
