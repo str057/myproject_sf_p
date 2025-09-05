@@ -1,5 +1,6 @@
 {% extends 'fly/base.html' %}
 {% load static %}
+{% load product_tags %}
 
 {% block content %}
 <div class="album py-5 bg-body-tertiary">
@@ -21,6 +22,19 @@
                     {% endif %}
                     <div class="card-body">
                         <h5 class="card-title">{{ product.name }}</h5>
+
+                        <!-- Информация о статусе и владельце -->
+                        <div class="mb-3">
+                            <span class="badge bg-{% if product.publication_status == 'published' %}success{% elif product.publication_status == 'draft' %}warning{% else %}danger{% endif %}">
+                                {{ product.get_publication_status_display }}
+                            </span>
+                            {% if product.owner %}
+                                <span class="badge bg-info text-dark">
+                                    Владелец: {{ product.owner.username }}
+                                </span>
+                            {% endif %}
+                        </div>
+
                         <p class="card-text">
                             <strong>Описание:</strong><br>
                             {{ product.description|linebreaks }}
@@ -35,12 +49,49 @@
                         </p>
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">{{ product.price }} руб.</small>
+                            <small class="text-muted">Просмотров: {{ product.views_counter }}</small>
                         </div>
-                        <!-- Добавленная кнопка "Назад" -->
-                        <div class="mt-3">
+
+                        <!-- КНОПКИ ДЕЙСТВИЙ С ПРОВЕРКОЙ ПРАВ -->
+                        <div class="mt-3 d-flex gap-2 flex-wrap">
+                            <!-- Кнопка назад -->
                             <a href="{% url 'fly:product_list' %}" class="btn btn-secondary">
-                                ← Назад к списку товаров
+                                ← Назад к списку
                             </a>
+
+                            {% if user.is_authenticated %}
+                                <!-- Редактирование - только владелец -->
+                                {% if user == product.owner %}
+                                    <a href="{% url 'fly:product_update' product.pk %}" class="btn btn-primary">
+                                        ✏️ Редактировать
+                                    </a>
+                                {% endif %}
+
+                                <!-- Удаление - владелец или модератор -->
+                                {% if user == product.owner or user|is_product_moderator %}
+                                    <a href="{% url 'fly:product_delete' product.pk %}" class="btn btn-danger">
+                                        🗑️ Удалить
+                                    </a>
+                                {% endif %}
+
+                                <!-- Публикация - только владелец для черновиков -->
+                                {% if user == product.owner and product.publication_status == 'draft' %}
+                                    <form method="post" action="{% url 'fly:product_publish' product.pk %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success">📢 Опубликовать</button>
+                                    </form>
+                                {% endif %}
+
+                                <!-- Снятие с публикации - модератор или владелец -->
+                                {% if user|can_unpublish_product or user == product.owner %}
+                                    {% if product.publication_status == 'published' %}
+                                        <form method="post" action="{% url 'fly:product_unpublish' product.pk %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-warning">🚫 Снять с публикации</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -49,5 +100,3 @@
     </div>
 </div>
 {% endblock %}
-
-
