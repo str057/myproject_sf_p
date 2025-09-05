@@ -31,4 +31,4 @@ urlpatterns = [
     ),
 ]
 
-# skypro
+# skypro32
